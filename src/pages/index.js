@@ -37,20 +37,55 @@ function renderPlaceholder() {
 }
 
 function apply() {
-  const button = renderButton();
-
-  button.addEventListener('click', () => {
-    const fmtColumn = document.querySelector('.main-content > div:nth-child(2) > div:first-child');
-    fmtColumn.style.display = fmtColumn.style.display === 'none' ? '' : 'none';
-  }, false);
-
   const bar = document.querySelector('.main-content > div:first-child');
 
-  bar.insertBefore(button, bar.children[0]);
-  bar.insertBefore(renderPlaceholder(), bar.children[bar.children.length-1]);
+  const button = document.querySelector('.main-content > div:nth-child(1) [data-tooltip="Swap panels"]');
+  // const button = renderButton();
+  button.addEventListener('click', () => {
+    const fmtColumn = document.querySelector('.main-content > div:nth-child(2) > div:first-child');
+    fmtColumn.classList.toggle('hide');
+  }, false);
+  // bar.insertBefore(button, bar.children[0]);
+  // bar.insertBefore(renderPlaceholder(), bar.children[bar.children.length-1]);
+
+  previewGate();
 }
 
 export {
   isReady,
   apply,
 };
+
+
+
+
+
+function previewGate() {
+  const scriptId = 'preview-gate';
+  if (!!document.querySelector('#'+scriptId)) return;
+
+  function previewGateFn() {
+    const winOpen = window.open;
+    window.open = function() {
+      console.log(arguments)
+      const iframeId = 'preview-window';
+      if (arguments[1] === 'forestry/preview') {
+        let iframe = document.querySelector('#'+iframeId)
+        if (!iframe) {
+          iframe = document.createElement('iframe');
+          iframe.src = arguments[0];
+          iframe.id = iframeId;
+          document.body.appendChild(iframe);
+        }
+        return iframe.contentWindow;
+      }
+      var win = winOpen.apply(this, arguments);
+      return win;
+    };
+  }
+
+  let script = document.createElement('script');
+  script.id = scriptId;
+  script.innerHTML = '('+previewGateFn+')();';
+  document.body.appendChild(script);
+}
